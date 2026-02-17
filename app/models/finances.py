@@ -24,7 +24,7 @@ class Income(Base):
     __tablename__ = 'incomes'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column()
     amount: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
     date: Mapped[datetime] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True)
@@ -38,7 +38,7 @@ class Expense(Base):
     __tablename__ = 'expenses'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    description: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column()
     amount: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
     date: Mapped[datetime] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True)
