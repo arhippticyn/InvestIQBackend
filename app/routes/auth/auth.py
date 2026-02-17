@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Body, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from app.schemas.user import *
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -12,6 +13,7 @@ from passlib.context import CryptContext
 from jwt.exceptions import InvalidTokenError
 from authlib.integrations.starlette_client import OAuth
 from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+from urllib.parse import urlencode
 
 router = APIRouter()
 
@@ -203,7 +205,12 @@ async def google_callback(request: Request,res: Response,db: AsyncSession = Depe
         path='/'
     )
 
-    return user
+    params_access = urlencode({'access_token': access_token})
+    params_refresh= urlencode({'refresh_token': refresh_token})
+
+
+    return RedirectResponse(url=f'http://localhost:5174/?{params_access}&{params_refresh}')
+
 
 @router.delete('/logout')
 async def logout(res: Response):
