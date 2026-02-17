@@ -1,1 +1,7 @@
-# Тут вся логіка register login і потім додати цей роутер до файлу router.py
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get('/ez')
+def ez():
+    return 'ez'
