@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Body, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.schemas.user import *
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,14 +6,31 @@ from sqlalchemy import select
 from app.models.user import User
 from app.db.sessions import get_db
 from app.core.config import ALGORITM, SECRET_KEY, AUTH_EXP
-from app.services.auth import encode_token
+from app.services.auth import encode_token, verify_token
 from app.schemas.user import RegisterUser, UserResponse, LoginUser
 from passlib.context import CryptContext
+from jwt.exceptions import InvalidTokenError
+from authlib.integrations.starlette_client import OAuth
+from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 pwd_context = CryptContext(schemes=['argon2'], deprecated='auto')
+
+
+oauth = OAuth()
+
+oauth.register(
+    name="google",
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+
+
 
 
 def hash_password(password:str)->str:
@@ -68,7 +85,7 @@ async def register(user: RegisterUser, res: Response, db: AsyncSession = Depends
 
 
 @router.post('/login', response_model=UserResponse)
-async def login(res: Response, user_data: LoginUser, db: AsyncSession = Depends(get_db)):
+async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSession = Depends(get_db)):
     user = (await db.execute(select(User).where(User.email == user_data.email))).scalars().first()
 
     if not user:
@@ -107,3 +124,90 @@ async def login(res: Response, user_data: LoginUser, db: AsyncSession = Depends(
     )
 
     return user
+
+async def get_currunt_user(request: Request, db: AsyncSession = Depends(get_db)):
+    creditials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},)
+
+    token = request.cookies.get('access_token')
+
+    try:
+        id = verify_token(token).get('id')
+
+        if id is None:
+            raise creditials_exception
+        
+    except InvalidTokenError:
+        raise creditials_exception
+    
+    user = (await db.execute(select(User).where(User.id == id))).scalars().first()
+
+    if user is None:
+        raise creditials_exception
+    
+    return user
+
+@router.get('/users/me', response_model=UserResponse)
+async def read_user(user: User = Depends(get_currunt_user)):
+    return user
+
+@router.get('/google')
+async def google_login(request: Request):
+    redirect_uri = 'http://127.0.0.1:8000/auth/google/callback'
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@router.get('/google/callback', response_model=UserResponse)
+async def google_callback(request: Request,res: Response,db: AsyncSession = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token['userinfo']
+
+    email = user_info['email']
+    username = user_info['email'].split('@')[0]
+    provider = 'google'
+    provider_id = user_info['sub']
+
+    user = (await db.execute(select(User).where(User.provider == provider, User.provider_id == provider_id))).scalars().first()
+
+    if not user:
+        user = User(username=username, email=email, hash_password=None, provider=provider, provider_id=provider_id)
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    payload = {
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    }
+
+    access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
+    refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
+
+    res.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            max_age=60 * 10,
+            samesite='lax',  
+            secure=False,
+            path='/'
+        )
+
+    res.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+        max_age = 60 * 60 * 24,
+        samesite='lax',  
+        secure=False,
+        path='/'
+    )
+
+    return user
+
+@router.delete('/logout')
+async def logout(res: Response):
+    res.delete_cookie('access_token', path='/')
+    res.delete_cookie('refresh_token', path='/')
+
+    return {'detail': 'Log Out Success'}

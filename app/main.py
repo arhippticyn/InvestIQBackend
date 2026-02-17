@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.routes.router import router
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from app.core.config import SECRET_KEY
 
 app = FastAPI()
 
@@ -17,6 +19,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],          
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY
 )
 
 @app.get('/')
