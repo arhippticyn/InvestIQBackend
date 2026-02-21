@@ -10,10 +10,10 @@ from app.core.config import ALGORITM, SECRET_KEY, AUTH_EXP
 from app.services.auth import encode_token, verify_token
 from app.schemas.user import RegisterUser, UserResponse, LoginUser
 from passlib.context import CryptContext
-from jwt.exceptions import InvalidTokenError
 from authlib.integrations.starlette_client import OAuth
 from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 from urllib.parse import urlencode
+from app.services.auth import get_currunt_user
 
 router = APIRouter()
 
@@ -30,10 +30,6 @@ oauth.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
-
-
-
-
 
 def hash_password(password:str)->str:
     return pwd_context.hash(password)
@@ -127,32 +123,6 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
 
     return user
 
-async def get_currunt_user(request: Request, db: AsyncSession = Depends(get_db)):
-    creditials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},)
-
-    token = request.cookies.get('access_token')
-
-    try:
-        id = verify_token(token).get('id')
-
-        if id is None:
-            raise creditials_exception
-        
-    except InvalidTokenError:
-        raise creditials_exception
-    
-    user = (await db.execute(select(User).where(User.id == id))).scalars().first()
-
-    if user is None:
-        raise creditials_exception
-    
-    return user
-
-@router.get('/users/me', response_model=UserResponse)
-async def read_user(user: User = Depends(get_currunt_user)):
-    return user
-
 @router.get('/google')
 async def google_login(request: Request):
     redirect_uri = 'http://127.0.0.1:8000/auth/google/callback'
@@ -218,3 +188,8 @@ async def logout(res: Response):
     res.delete_cookie('refresh_token', path='/')
 
     return {'detail': 'Log Out Success'}
+
+
+@router.get('/users/me', response_model=UserResponse)
+async def read_user(user: User = Depends(get_currunt_user)):
+    return user
