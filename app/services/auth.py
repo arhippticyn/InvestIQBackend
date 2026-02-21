@@ -18,6 +18,7 @@ def encode_token(payload: dict, SECRET_KEY: str, algorithm: str, type: str, exp:
 
     return jwt.encode(payload=payload_copy, key=SECRET_KEY, algorithm=algorithm)
 
+
 def verify_token(token: str):
      try:
         payload = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITM])
