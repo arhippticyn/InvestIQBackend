@@ -129,7 +129,7 @@ async def google_login(request: Request):
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-@router.get('/google/callback', response_model=UserResponse)
+@router.get('/google/callback')
 async def google_callback(request: Request,res: Response,db: AsyncSession = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
     user_info = token['userinfo']
@@ -191,6 +191,4 @@ async def logout(res: Response):
     return {'detail': 'Log Out Success'}
 
 
-@router.get('/users/me', response_model=UserResponse)
-async def read_user(user: User = Depends(get_currunt_user)):
-    return user
+
