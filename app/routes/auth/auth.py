@@ -20,7 +20,6 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
 pwd_context = CryptContext(schemes=['argon2'], deprecated='auto')
 
-
 oauth = OAuth()
 
 oauth.register(
@@ -123,10 +122,12 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
 
     return user
 
+
 @router.get('/google')
 async def google_login(request: Request):
     redirect_uri = 'http://127.0.0.1:8000/auth/google/callback'
     return await oauth.google.authorize_redirect(request, redirect_uri)
+
 
 @router.get('/google/callback', response_model=UserResponse)
 async def google_callback(request: Request,res: Response,db: AsyncSession = Depends(get_db)):
