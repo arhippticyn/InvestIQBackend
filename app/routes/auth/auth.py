@@ -149,6 +149,9 @@ async def google_callback(request: Request,res: Response,db: AsyncSession = Depe
         await db.commit()
         await db.refresh(user)
 
+    if user.provider == 'local':
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User is regist in local')
+
     payload = {
         'id': user.id,
         'username': user.username,
@@ -192,5 +195,32 @@ async def logout(res: Response):
 
     return {'detail': 'Log Out Success'}
 
+@router.get('/refresh')
+async def get_access(reguest: Request, res: Response):
+    token_refresh = reguest.cookies.get('refresh_token')
 
+    payload = verify_token(token_refresh)
 
+    access_token = encode_token(payload, SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
+
+    res.set_cookie(
+        key='access_token',
+        value=access_token,
+        httponly=True,
+        max_age=60 * 10,
+        samesite='lax',  
+        secure=False,
+        path='/'
+    )
+
+    res.set_cookie(
+        key='refresh_token',
+        value=token_refresh,
+        httponly=True,
+        max_age = 60 * 60 * 24,
+        samesite='lax',  
+        secure=False,
+        path='/'
+    )
+
+    return {"access_token":access_token}
