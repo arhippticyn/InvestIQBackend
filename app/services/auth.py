@@ -39,7 +39,7 @@ async def get_currunt_user(request: Request, db: AsyncSession = Depends(get_db))
         if id is None:
             raise creditials_exception
         
-    except InvalidTokenError:
+    except (InvalidTokenError, AttributeError):
         raise creditials_exception
     
     user = (await db.execute(select(User).where(User.id == id))).scalars().first()
