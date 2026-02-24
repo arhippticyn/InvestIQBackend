@@ -27,3 +27,4 @@ class CategoryCreate(BaseCategory):
 
 class CategoryResponse(BaseCategory):
     id: int
+
