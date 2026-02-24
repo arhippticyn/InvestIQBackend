@@ -42,17 +42,10 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode using async engine."""
-
-    # Создаем SSL контекст для Neon
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = True
-    ssl_context.verify_mode = ssl.CERT_REQUIRED
-
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"ssl": ssl_context},  # Прокидываем SSL правильно
     )
 
     async with connectable.connect() as connection:
