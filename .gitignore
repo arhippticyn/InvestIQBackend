@@ -92,3 +92,4 @@ docker-compose.override.yml
 .tox/
 .nox/
 alembic.ini
+docker-compose.yml
