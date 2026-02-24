@@ -127,7 +127,7 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
 
 @router.get('/google')
 async def google_login(request: Request):
-    redirect_uri = 'http://127.0.0.1:8000/auth/google/callback'
+    redirect_uri = 'http://localhost/auth/google/callback'
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
@@ -196,10 +196,15 @@ async def logout(res: Response):
     return {'detail': 'Log Out Success'}
 
 @router.get('/refresh')
-async def get_access(reguest: Request, res: Response):
-    token_refresh = reguest.cookies.get('refresh_token')
+async def get_access(request: Request, res: Response):
+    token_refresh = request.cookies.get('refresh_token')
+
+    if not token_refresh:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
 
     payload = verify_token(token_refresh)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Refresh token invalid or expired")
 
     access_token = encode_token(payload, SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
 
@@ -217,10 +222,10 @@ async def get_access(reguest: Request, res: Response):
         key='refresh_token',
         value=token_refresh,
         httponly=True,
-        max_age = 60 * 60 * 24,
+        max_age=60 * 60 * 24,
         samesite='lax',  
         secure=False,
         path='/'
     )
 
-    return {"access_token":access_token}
+    return {"access_token": access_token}
