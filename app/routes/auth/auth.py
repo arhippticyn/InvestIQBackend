@@ -14,6 +14,7 @@ from authlib.integrations.starlette_client import OAuth
 from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 from urllib.parse import urlencode
 from app.services.auth import get_currunt_user
+from app.services.cookies import set_auth_cookies
 
 router = APIRouter()
 
@@ -60,25 +61,7 @@ async def register(user: RegisterUser, res: Response, db: AsyncSession = Depends
     access = encode_token(payload, SECRET_KEY, ALGORITM, type='access', exp=10)
     refresh = encode_token(payload, SECRET_KEY, ALGORITM, type='refresh', exp=1440)
 
-    res.set_cookie(
-            key='access_token',
-            value=access,
-            httponly=True,
-            max_age=60 * 10,
-            samesite='lax',  
-            secure=False,
-            path='/'
-        )
-
-    res.set_cookie(
-        key='refresh_token',
-        value=refresh,
-        httponly=True,
-        max_age = 60 * 60 * 24,
-        samesite='lax',  
-        secure=False,
-        path='/'
-    )
+    set_auth_cookies(res, access, refresh)
 
     return user_db
 
@@ -102,25 +85,7 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
     access = encode_token(payload, SECRET_KEY, ALGORITM, type='access', exp=10)
     refresh = encode_token(payload, SECRET_KEY, ALGORITM, type='refresh', exp=1440)
 
-    res.set_cookie(
-            key='access_token',
-            value=access,
-            httponly=True,
-            max_age=60 * 10,
-            samesite='lax',  
-            secure=False,
-            path='/'
-        )
-
-    res.set_cookie(
-        key='refresh_token',
-        value=refresh,
-        httponly=True,
-        max_age = 60 * 60 * 24,
-        samesite='lax',  
-        secure=False,
-        path='/'
-    )
+    set_auth_cookies(res, access, refresh)
 
     return user
 
@@ -161,31 +126,9 @@ async def google_callback(request: Request,res: Response,db: AsyncSession = Depe
     access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
     refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
 
-    res.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            max_age=60 * 10,
-            samesite='lax',  
-            secure=False,
-            path='/'
-        )
+    set_auth_cookies(res, access_token, refresh_token)
 
-    res.set_cookie(
-        key='refresh_token',
-        value=refresh_token,
-        httponly=True,
-        max_age = 60 * 60 * 24,
-        samesite='lax',  
-        secure=False,
-        path='/'
-    )
-
-    params_access = urlencode({'access_token': access_token})
-    params_refresh= urlencode({'refresh_token': refresh_token})
-
-
-    return RedirectResponse(url=f'http://localhost:5174/?{params_access}&{params_refresh}')
+    return RedirectResponse(url='http://localhost:5174/')
 
 
 @router.delete('/logout')
@@ -194,6 +137,7 @@ async def logout(res: Response):
     res.delete_cookie('refresh_token', path='/')
 
     return {'detail': 'Log Out Success'}
+
 
 @router.get('/refresh')
 async def get_access(request: Request, res: Response):
@@ -208,24 +152,6 @@ async def get_access(request: Request, res: Response):
 
     access_token = encode_token(payload, SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
 
-    res.set_cookie(
-        key='access_token',
-        value=access_token,
-        httponly=True,
-        max_age=60 * 10,
-        samesite='lax',  
-        secure=False,
-        path='/'
-    )
+    set_auth_cookies(res, access_token, token_refresh)
 
-    res.set_cookie(
-        key='refresh_token',
-        value=token_refresh,
-        httponly=True,
-        max_age=60 * 60 * 24,
-        samesite='lax',  
-        secure=False,
-        path='/'
-    )
-
-    return {"access_token": access_token}
+    return {"message": 'Success'}

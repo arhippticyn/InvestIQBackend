@@ -43,6 +43,11 @@ async def get_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncS
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found"')
 
 
+@router.get('/category/incomes', response_model=List[FinanceResponse])
+async def get_incomes_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
+
+
 @router.delete('/incomes/{id}', response_model=FinanceResponse)
 async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     income = (await db.execute(select(Income).where((Income.user_id == user.id) & (Income.id == id)))).scalars().first()
@@ -54,11 +59,6 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found"')
 
     return income
-
-
-@router.get('/category/incomes', response_model=List[FinanceResponse])
-async def get_incomes_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
-    return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
 
 
 # expenses
