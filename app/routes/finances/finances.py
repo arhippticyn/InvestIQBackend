@@ -43,7 +43,6 @@ async def get_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncS
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found"')
 
 
-
 @router.delete('/incomes/{id}', response_model=FinanceResponse)
 async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     income = (await db.execute(select(Income).where((Income.user_id == user.id) & (Income.id == id)))).scalars().first()
@@ -55,6 +54,11 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found"')
 
     return income
+
+
+@router.get('/category/incomes', response_model=List[FinanceResponse])
+async def get_incomes_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
 
 
 # expenses
@@ -72,9 +76,11 @@ async def create_expense(expense_data: FinanceCreate, user: User = Depends(get_c
 
     return new_expense
 
+
 @router.get('/expense', response_model=List[FinanceResponse])
 async def get_expenses(user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Expense).where(Expense.user_id == user.id))).scalars().all()
+
 
 @router.get('/expense/{id}', response_model=FinanceResponse)
 async def get_expense_by_id(id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
@@ -95,9 +101,11 @@ async def set_amount_expense(id: int, new_amount: int,user: User = Depends(get_c
 
     return expense
 
+
 @router.get('/category/expense', response_model=List[FinanceResponse])
-async def get_expense_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def get_expenses_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Expense).where(Expense.category_id == category_id, Expense.user_id == user.id))).scalars().all()
+
 
 @router.delete('/expense/{id}')
 async def delete_expense_by_id(id: int,user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
