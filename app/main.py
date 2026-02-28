@@ -28,6 +28,8 @@ app.add_middleware(
     secret_key=SECRET_KEY
 )
 
-@app.get('/')
+@app.get("/")
 async def root():
-    return 'ez'
+    return {
+        "detail": "API is running. See documentation at /docs"
+    }
