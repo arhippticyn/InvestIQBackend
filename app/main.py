@@ -16,6 +16,11 @@ origins = [
 app.include_router(router=router)
 
 app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY
+)
+
+app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,        
     allow_credentials=True,
@@ -23,10 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=SECRET_KEY
-)
 
 @app.get("/")
 async def root():

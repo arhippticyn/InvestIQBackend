@@ -97,7 +97,7 @@ async def google_login(request: Request):
 
 
 @router.get('/google/callback')
-async def google_callback(request: Request,res: Response,db: AsyncSession = Depends(get_db)):
+async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
     user_info = token['userinfo']
 
@@ -126,9 +126,11 @@ async def google_callback(request: Request,res: Response,db: AsyncSession = Depe
     access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
     refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
 
-    set_auth_cookies(res, access_token, refresh_token)
+    redirect = RedirectResponse(url='http://localhost:5174/')
 
-    return RedirectResponse(url='http://localhost:5174/')
+    set_auth_cookies(redirect, access_token, refresh_token)
+
+    return redirect
 
 
 @router.delete('/logout')
