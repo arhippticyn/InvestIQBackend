@@ -2,11 +2,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from app.core.config import DB_URL, DEBUG
 
+clean_url = DB_URL.split("?")[0] if DB_URL else DB_URL
+
 if DEBUG:
     engine = create_async_engine(DB_URL)
 else:
     engine = create_async_engine(
-        DB_URL, 
+        clean_url, 
         echo=True,
         connect_args={"ssl": "require"}
     )
