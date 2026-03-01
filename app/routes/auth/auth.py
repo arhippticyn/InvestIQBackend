@@ -92,7 +92,7 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
 
 @router.get('/google')
 async def google_login(request: Request):
-    redirect_uri = 'http://localhost/auth/google/callback'
+    redirect_uri = 'https://investiq-nl1r.onrender.com/auth/google/callback'
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
