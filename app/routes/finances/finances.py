@@ -48,6 +48,16 @@ async def get_incomes_by_category(category_id: int, user: User = Depends(get_cur
     return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
 
 
+@router.delete('/incomes/clear')
+async def clear_incomes(db: AsyncSession = Depends(get_db)):
+    incomes = (await db.execute(select(Income))).scalars().all()
+
+    for income in incomes:
+       await db.delete(income)
+    await db.commit()
+
+    return {'message': 'Incomes creared success'}
+
 @router.delete('/incomes/{id}', response_model=FinanceResponse)
 async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     income = (await db.execute(select(Income).where((Income.user_id == user.id) & (Income.id == id)))).scalars().first()
@@ -56,7 +66,7 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
         await db.delete(income)
         await db.commit()
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found"')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found')
 
     return income
 
@@ -105,6 +115,17 @@ async def set_amount_expense(id: int, new_amount: int,user: User = Depends(get_c
 @router.get('/category/expense', response_model=List[FinanceResponse])
 async def get_expenses_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Expense).where(Expense.category_id == category_id, Expense.user_id == user.id))).scalars().all()
+
+@router.delete('/expense/clear')
+async def clear_expense(db: AsyncSession = Depends(get_db)):
+    expenses = (await db.execute(select(Expense))).scalars().all()
+
+    for expense in expenses:
+        await db.delete(expense)
+    
+    await db.commit()
+
+    return {'message': 'Expenses creared success'}
 
 
 @router.delete('/expense/{id}')
