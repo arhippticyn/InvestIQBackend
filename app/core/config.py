@@ -9,4 +9,4 @@ GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 AUTH_EXP = os.getenv('AUTH_EXP')
 ALGORITM = os.getenv('ALGORITM')
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG')
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
