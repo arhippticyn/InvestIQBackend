@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class BaseFinance(BaseModel):
@@ -16,6 +16,8 @@ class FinanceResponse(BaseFinance):
     id: int 
     is_active: bool
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class BaseCategory(BaseModel):
     name: str
@@ -27,4 +29,6 @@ class CategoryCreate(BaseCategory):
 
 class CategoryResponse(BaseCategory):
     id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
