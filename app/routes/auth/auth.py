@@ -11,7 +11,7 @@ from app.services.auth import encode_token, verify_token
 from app.schemas.user import RegisterUser, UserResponse, LoginUser
 from passlib.context import CryptContext
 from authlib.integrations.starlette_client import OAuth
-from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DEBUG, FRONTEND_URL
 from urllib.parse import urlencode
 from app.services.auth import get_currunt_user
 from app.services.cookies import set_auth_cookies
@@ -92,7 +92,13 @@ async def login(res: Response, user_data: LoginUser = Body(...), db: AsyncSessio
 
 @router.get('/google')
 async def google_login(request: Request):
-    redirect_uri = 'https://investiq-nl1r.onrender.com/auth/google/callback'
+    redirect_uri = None
+    
+    if DEBUG:
+        redirect_uri = 'http://localhost:8000/auth/google/callback'
+    else:
+        redirect_uri = 'https://investiq-nl1r.onrender.com/auth/google/callback'
+
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
@@ -106,6 +112,11 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     provider = 'google'
     provider_id = user_info['sub']
 
+    user_local_provider = (await db.execute(select(User).where(User.provider == 'local', User.email == email))).scalars().first()
+
+    if user_local_provider:
+        return RedirectResponse(url=FRONTEND_URL)
+
     user = (await db.execute(select(User).where(User.provider == provider, User.provider_id == provider_id))).scalars().first()
 
     if not user:
@@ -114,8 +125,6 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
         await db.commit()
         await db.refresh(user)
 
-    if user.provider == 'local':
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User is regist in local')
 
     payload = {
         'id': user.id,
@@ -126,7 +135,7 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
     refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
 
-    redirect = RedirectResponse(url='http://localhost:5174/home')
+    redirect = RedirectResponse(url=f'{FRONTEND_URL}/home')
 
     set_auth_cookies(redirect, access_token, refresh_token)
 
