@@ -126,7 +126,7 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
     refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
 
-    redirect = RedirectResponse(url='http://localhost:5174/')
+    redirect = RedirectResponse(url='http://localhost:5174/home')
 
     set_auth_cookies(redirect, access_token, refresh_token)
 
