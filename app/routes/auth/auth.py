@@ -47,7 +47,7 @@ async def register(user: RegisterUser, res: Response, db: AsyncSession = Depends
     
 
     user_username = user.email.split('@')[0]
-    user_db = User(username=user_username, email=user.email, hash_password=hash_password(user.password), provider='local', provider_id=user_username)
+    user_db = User(username=user_username, email=user.email, hash_password=hash_password(user.password), provider='local', provider_id=user_username, budget=0)
     db.add(user_db)
     await db.commit()
     await db.refresh(user_db)
@@ -109,7 +109,7 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     user = (await db.execute(select(User).where(User.provider == provider, User.provider_id == provider_id))).scalars().first()
 
     if not user:
-        user = User(username=username, email=email, hash_password=None, provider=provider, provider_id=provider_id)
+        user = User(username=username, email=email, hash_password=None, provider=provider, provider_id=provider_id, budget=0)
         db.add(user)
         await db.commit()
         await db.refresh(user)
