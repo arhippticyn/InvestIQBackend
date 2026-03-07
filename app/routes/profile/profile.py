@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from app.models.user import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.auth import get_currunt_user
@@ -13,7 +13,7 @@ async def get_user(user: User = Depends(get_currunt_user)):
     return user
 
 @router.patch('/setusername', response_model=UserResponse)
-async def set_username(new_username: str, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def set_username(new_username: str = Body(...), user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     user_db = (await db.execute(select(User).where(User.id == user.id))).scalars().first()
 
     if new_username:
