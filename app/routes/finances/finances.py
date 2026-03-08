@@ -144,7 +144,7 @@ async def delete_expense_by_id(id: int,user: User = Depends(get_currunt_user), d
 # categories
 
 @router.post('/category', response_model=CategoryResponse)
-async def create_category(category_data: CategoryCreate, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def create_category(category_data: CategoryCreate, db: AsyncSession = Depends(get_db)):
     category = category_data.model_dump()
 
     new_category = Category(**category)
@@ -158,14 +158,14 @@ async def create_category(category_data: CategoryCreate, user: User = Depends(ge
 
 
 @router.get('/category', response_model=List[CategoryResponse])
-async def get_categories(user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def get_categories(db: AsyncSession = Depends(get_db)):
     categories = (await db.execute(select(Category))).scalars().all()
 
     return categories
 
 
 @router.get('/category/{id}', response_model=CategoryResponse)
-async def get_category_by_id(id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def get_category_by_id(id: int, db: AsyncSession = Depends(get_db)):
     category = (await db.execute(select(Category).where(Category.id == id))).scalars().first()
 
     if category:
@@ -175,7 +175,7 @@ async def get_category_by_id(id: int, user: User = Depends(get_currunt_user), db
 
 
 @router.delete('/category/{id}', response_model=CategoryResponse)
-async def delete_category_by_id(id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+async def delete_category_by_id(id: int, db: AsyncSession = Depends(get_db)):
     category = (await db.execute(select(Category).where(Category.id == id))).scalars().first()
 
     if category:
