@@ -14,8 +14,8 @@ def set_auth_cookies(
         value=access_token,
         httponly=True,
         max_age=60 * 10,
-        samesite="lax",
-        secure=secure,
+        samesite="none",
+        secure=True,  
         path="/",
     )
 
@@ -24,7 +24,7 @@ def set_auth_cookies(
         value=refresh_token,
         httponly=True,
         max_age=60 * 60 * 24,
-        samesite="lax",
-        secure=secure,
+        samesite="none",
+        secure=True,  
         path="/",
     )
