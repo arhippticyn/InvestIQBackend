@@ -58,7 +58,7 @@ async def clear_incomes(db: AsyncSession = Depends(get_db)):
 
     return {'message': 'Incomes creared success'}
 
-@router.delete('/incomes/{id}', response_model=FinanceResponse)
+@router.delete('/incomes/{id}')
 async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     income = (await db.execute(select(Income).where((Income.user_id == user.id) & (Income.id == id)))).scalars().first()
 
@@ -68,7 +68,7 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Income not found')
 
-    return income
+    return id
 
 
 # expenses
