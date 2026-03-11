@@ -32,3 +32,5 @@ class CategoryResponse(BaseCategory):
 
     model_config = ConfigDict(from_attributes=True)
 
+class AmountUpdate(BaseModel):
+    amount: int
