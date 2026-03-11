@@ -14,7 +14,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: EmailStr
-    budget: int
+    budget: float
 
     class Config:
         orm_mode = True

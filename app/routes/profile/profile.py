@@ -24,10 +24,9 @@ async def set_username(new_username: str = Body(...), user: User = Depends(get_c
     return user_db
 
 @router.patch('/budget')
-async def patch_budget(new_budget: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
-    if new_budget:
-        user.budget = new_budget
-        await db.commit()
+async def patch_budget(new_budget: float = Body(...), user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    user.budget = new_budget
+    await db.commit()
 
     return user.budget
 
