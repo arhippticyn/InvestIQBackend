@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from app.models.finances import Category, Income, Expense
 from app.models.user import User
 from app.services.auth import get_currunt_user
-from app.schemas.finances import FinanceCreate, FinanceResponse, CategoryCreate, CategoryResponse
+from app.schemas.finances import FinanceCreate, FinanceResponse, CategoryCreate, CategoryResponse, AmountUpdate
 from sqlalchemy import select
 from app.db.sessions import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,15 +72,15 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
 
 
 @router.put('/income/amount/{id}', response_model=FinanceResponse)
-async def put_amount(id: int, new_amount: int, db: AsyncSession = Depends(get_db)):
-    income = (await db.execute(select(Income).where(Income.id == id))).scalars().first()
+async def put_amount(id: int, data: AmountUpdate,user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    income = (await db.execute(select(Income).where(Income.id == id, Income.user_id == user.id))).scalars().first()
 
     if not income:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Income is not found')
     
-    if new_amount:
-        income.amount = new_amount
-        await db.commit()
+    income.amount = data.amount
+    await db.commit()
+    await db.refresh(income)
 
     return income
 
