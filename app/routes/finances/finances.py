@@ -71,7 +71,7 @@ async def delete_income_by_id(id: int, user = Depends(get_currunt_user), db: Asy
     return id
 
 
-@router.put('/income/amount', response_model=FinanceResponse)
+@router.put('/income/amount/{id}', response_model=FinanceResponse)
 async def put_amount(id: int, new_amount: int, db: AsyncSession = Depends(get_db)):
     income = (await db.execute(select(Income).where(Income.id == id))).scalars().first()
 
