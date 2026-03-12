@@ -63,11 +63,7 @@ async def get_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncS
 async def get_incomes_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
 
-<<<<<<< HEAD
 @router.get('/incomes/result')
-=======
-@router.get('/income/result')
->>>>>>> origin/features/result
 async def get_result_month(year: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
 
     result = []
@@ -82,11 +78,7 @@ async def get_result_month(year: int, user: User = Depends(get_currunt_user), db
 
     result.reverse()
 
-<<<<<<< HEAD
     return {'months': result,'year':year}
-=======
-    return {'month': result,'year':year}
->>>>>>> origin/features/result
 
 
 @router.delete('/incomes/clear')
@@ -167,11 +159,7 @@ async def get_result_expense_month(year: int, user: User = Depends(get_currunt_u
 
     
 
-<<<<<<< HEAD
     return {'months': result,'year':year}
-=======
-    return {'month': total,'year':year}
->>>>>>> origin/features/result
 
 
 @router.patch('/expense/{id}', response_model=FinanceResponse)
