@@ -3,12 +3,28 @@ from app.models.finances import Category, Income, Expense
 from app.models.user import User
 from app.services.auth import get_currunt_user
 from app.schemas.finances import FinanceCreate, FinanceResponse, CategoryCreate, CategoryResponse, AmountUpdate
-from sqlalchemy import select
+from sqlalchemy import select, extract, func
 from app.db.sessions import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+from datetime import datetime
 
 router = APIRouter()
+
+MONTHS_UA = {
+    1: 'СІЧЕНЬ',
+    2: 'ЛЮТИЙ',
+    3: 'БЕРЕЗЕНЬ',
+    4: 'КВІТЕНЬ',
+    5: 'ТРАВЕНЬ',
+    6: 'ЧЕРВЕНЬ',
+    7: 'ЛИПЕНЬ',
+    8: 'СЕРПЕНЬ',
+    9: 'ВЕРЕСЕНЬ',
+    10: 'ЖОВТЕНЬ',
+    11: 'ЛИСТОПАД',
+    12: 'ГРУДЕНЬ',
+}
 
 # incomes
 
@@ -46,6 +62,23 @@ async def get_income_by_id(id: int, user = Depends(get_currunt_user), db: AsyncS
 @router.get('/category/incomes', response_model=List[FinanceResponse])
 async def get_incomes_by_category(category_id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Income).where(Income.category_id == category_id, Income.user_id == user.id))).scalars().all()
+
+@router.get('/incomes/result')
+async def get_result_month(year: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+
+    result = []
+    for month in range(0,13):
+        total = (await db.execute(select(func.sum(Income.amount)).where(Income.user_id == user.id, extract('month', Income.date) == month, extract('year', Income.date) == year))).scalar()
+
+        if total:
+            result.append({
+                'month': MONTHS_UA[month],
+                'total': float(total)
+            })
+
+    result.reverse()
+
+    return {'months': result,'year':year}
 
 
 @router.delete('/incomes/clear')
@@ -108,6 +141,25 @@ async def get_expenses(user: User = Depends(get_currunt_user), db: AsyncSession 
 @router.get('/expense/{id}', response_model=FinanceResponse)
 async def get_expense_by_id(id: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
     return (await db.execute(select(Expense).where(Expense.id == id, Expense.user_id == user.id))).scalars().first()
+
+@router.get('/expense/result')
+async def get_result_expense_month(year: int, user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    result = []
+
+    for month in range(0,13):
+        total = (await db.execute(select(func.sum(Expense.amount)).where(Expense.user_id == user.id, extract('month', Expense.date) == month, extract('year', Expense.date) == year))).scalar()
+
+        if total:
+            result.append({
+                'month': MONTHS_UA[month],
+                'total': float(total)
+            })
+
+    result.reverse()
+
+    
+
+    return {'months': result,'year':year}
 
 
 @router.patch('/expense/{id}', response_model=FinanceResponse)
