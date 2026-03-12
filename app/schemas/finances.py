@@ -3,7 +3,7 @@ from datetime import datetime
 
 class BaseFinance(BaseModel):
     description: str
-    amount: int
+    amount: float
     date: datetime
     category_id: int
 
