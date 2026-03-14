@@ -34,3 +34,6 @@ class CategoryResponse(BaseCategory):
 
 class AmountUpdate(BaseModel):
     amount: int
+
+class BudgetUpdate(BaseModel):
+    new_budget: float
