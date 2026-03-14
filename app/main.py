@@ -3,7 +3,7 @@ from app.routes.router import router
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import SECRET_KEY
-from app.core.config import FRONTEND_URL
+from app.core.config import FRONTEND_URL, FRONTEND_URL_DEPLOY
 
 app = FastAPI()
 
@@ -12,7 +12,8 @@ origins = [
     'http://localhost:5174',
     'http://127.0.0.1:5174',
     'http://127.0.0.1:5173',
-    FRONTEND_URL
+    FRONTEND_URL, 
+    FRONTEND_URL_DEPLOY
 ]
 
 app.include_router(router=router)
