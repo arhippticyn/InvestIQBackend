@@ -11,7 +11,7 @@ from app.services.auth import encode_token, verify_token
 from app.schemas.user import RegisterUser, UserResponse, LoginUser
 from passlib.context import CryptContext
 from authlib.integrations.starlette_client import OAuth
-from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DEBUG, FRONTEND_URL
+from app.core.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DEBUG, FRONTEND_URL, FRONTEND_URL_DEPLOY
 from urllib.parse import urlencode
 from app.services.auth import get_currunt_user
 from app.services.cookies import set_auth_cookies
@@ -135,7 +135,10 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     access_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='access', exp=10)
     refresh_token = encode_token(payload=payload, SECRET_KEY=SECRET_KEY, algorithm=ALGORITM, type='refresh', exp=1440)
 
-    redirect = RedirectResponse(url=f'{FRONTEND_URL}/home')
+    if DEBUG:
+        redirect = RedirectResponse(url=f'{FRONTEND_URL}/home')
+    else:
+        redirect = RedirectResponse(url=f'{FRONTEND_URL_DEPLOY}/home')
 
     set_auth_cookies(redirect, access_token, refresh_token)
 
