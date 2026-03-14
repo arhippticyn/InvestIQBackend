@@ -5,6 +5,7 @@ from app.services.auth import get_currunt_user
 from app.schemas.user import UserResponse
 from app.db.sessions import get_db
 from sqlalchemy import select
+from app.schemas.finances import BudgetUpdate
 
 router = APIRouter()
 
@@ -24,8 +25,8 @@ async def set_username(new_username: str = Body(...), user: User = Depends(get_c
     return user_db
 
 @router.patch('/budget')
-async def patch_budget(new_budget: float = Body(...), user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
-    user.budget = new_budget
+async def patch_budget(data: BudgetUpdate = Body(...), user: User = Depends(get_currunt_user), db: AsyncSession = Depends(get_db)):
+    user.budget = data.new_budget
     await db.commit()
 
     return user.budget
