@@ -115,7 +115,11 @@ async def google_callback(request: Request,db: AsyncSession = Depends(get_db)):
     user_local_provider = (await db.execute(select(User).where(User.provider == 'local', User.email == email))).scalars().first()
 
     if user_local_provider:
-        return RedirectResponse(url=FRONTEND_URL)
+        if DEBUG:
+            return RedirectResponse(url=FRONTEND_URL)
+        else:
+            return RedirectResponse(url=FRONTEND_URL_DEPLOY)
+
 
     user = (await db.execute(select(User).where(User.provider == provider, User.provider_id == provider_id))).scalars().first()
 
